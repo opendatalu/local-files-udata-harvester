@@ -15,6 +15,7 @@ Copy the `.env.example` file into a file named `.env`. Adjust the following vari
 - docRoot: absolute path to the folder to be synced
 - nameRegex: Optional. Define a regex to filter the filenames you want to be synced.
 - mimeType: MIME type of the files which are synced.
+- overwrite: true if the existing files should be overwritten
 
 ## Run
 

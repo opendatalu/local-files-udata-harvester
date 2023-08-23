@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'fs/promises';
 import * as dotenv from 'dotenv'
-import {  getDataset, uploadResource } from './odp.js'
+import *as odp from './odp.js'
 
 
 // get the udata string for a given input file name
@@ -8,40 +8,76 @@ function toODPNames(name) {
   return name.toLowerCase().replaceAll(' ', '-').replaceAll('_', '-').replace(/--+/g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
+function getFilenameFromURL(url) {
+  const pathName =  new URL(url).pathname;
+  return pathName.substring(pathName.lastIndexOf('/')+1)  
+}
+
+function getResourceMeta(filename, resources) {
+  let resource = resources.filter(e => { return getFilenameFromURL(e.url) == filename})
+  if (resource.length === 0) {
+    throw new Error('Metadata not found for the file: '+ filename)
+  }
+  if (resource.length !== 1) {
+    throw new Error('Multiple metadata found for the file: '+ filename)
+  }
+  return resource[0]
+}
+
 async function main() {
   dotenv.config()
 
-  console.log((new Date()).toLocaleString(), 'Syncing starts...')
+  console.log((new Date()).toLocaleString(), 'Syncing starts for the dataset:', process.env.odpDatasetId)
 
   // udata is transforming all file names to its own format
-  const fileNamesOnDisk = await readdir(process.env.docRoot)
-
+  let fileNamesOnDisk = await readdir(process.env.docRoot)
+  if (process.env.nameRegex !== undefined) {
+    fileNamesOnDisk = fileNamesOnDisk.filter(x => x.match(process.env.nameRegex))
+  }
   const caseInsensitiveFilesOnDisk = fileNamesOnDisk.map(e => toODPNames(e))
   const mapping = {}
   fileNamesOnDisk.forEach(e => {
     mapping[toODPNames(e)] = e
   });
 
-  const dataset = await getDataset(process.env.odpDatasetId)
-  const filesOnODP = new Set(dataset.resources.map(e => e.title))
+  const dataset = await odp.getDataset(process.env.odpDatasetId)
+  const filesOnODP = new Set(dataset.resources.map(e => getFilenameFromURL(e.url)))
 
   let toAdd = [... new Set(caseInsensitiveFilesOnDisk.filter(x => !filesOnODP.has(x)))]
-
-  if (process.env.nameRegex !== undefined) {
-    toAdd = toAdd.filter(x => x.match(process.env.nameRegex))
+  let toUpdate = []
+  if (process.env.overwrite) {
+    toUpdate = [... new Set(caseInsensitiveFilesOnDisk.filter(x => filesOnODP.has(x)))]
   }
-  // sort files by modification date
-  console.log("Files to be uploaded:", toAdd)
+  
+  console.log("Files to add:", toAdd)
+  console.log("Files to update:", toUpdate)
   for (const e of toAdd) {
     // get file
     const file = await readFile(process.env.docRoot+'/'+mapping[e])
     // upload file
-    const result = await uploadResource(e, file, process.env.odpDatasetId, process.env.mimeType)
+    const result = await odp.createResource(e, file, process.env.odpDatasetId, process.env.mimeType)
 
     // display status
     const status = (Object.keys(result).length !== 0)
-    console.log('Resource upload', (result)?'succeeded': 'failed', 'for', e)
+    console.log('Resource creation', (result)?'succeeded': 'failed', 'for', e)
   }
+  for (const e of toUpdate) {
+    // get file
+    const file = await readFile(process.env.docRoot+'/'+mapping[e])
+
+    // get Meta
+    const meta = getResourceMeta(e, dataset.resources)
+    // upload file
+    const result = await odp.updateResource(e, file, process.env.odpDatasetId, meta.id, process.env.mimeType)
+
+    // update meta (udata bug?)
+    const resultMeta = await odp.updateResourceMeta(process.env.odpDatasetId, meta.id, meta.title, meta.description)
+
+    // display status
+    const status = (Object.keys(result).length !== 0) && (Object.keys(resultMeta).length !== 0)
+    console.log('Resource update', (result)?'succeeded': 'failed', 'for', e)
+  }
+
 }
 
 

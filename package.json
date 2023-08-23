@@ -1,5 +1,5 @@
 {
-  "name": "sftp-udata-harvester",
+  "name": "local-files-udata-harvester",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
