@@ -45,7 +45,7 @@ async function main() {
 
   let toAdd = [... new Set(caseInsensitiveFilesOnDisk.filter(x => !filesOnODP.has(x)))]
   let toUpdate = []
-  if (process.env.overwrite) {
+  if (process.env.overwrite === true) {
     toUpdate = [... new Set(caseInsensitiveFilesOnDisk.filter(x => filesOnODP.has(x)))]
   }
   
