@@ -42,10 +42,10 @@ async function main() {
 
   const dataset = await odp.getDataset(process.env.odpDatasetId)
   const filesOnODP = new Set(dataset.resources.map(e => getFilenameFromURL(e.url)))
-
+  
   let toAdd = [... new Set(caseInsensitiveFilesOnDisk.filter(x => !filesOnODP.has(x)))]
   let toUpdate = []
-  if (process.env.overwrite === true) {
+  if (process.env.overwrite === "true") {
     toUpdate = [... new Set(caseInsensitiveFilesOnDisk.filter(x => filesOnODP.has(x)))]
   }
   
