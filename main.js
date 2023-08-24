@@ -1,4 +1,5 @@
-import { readdir, readFile } from 'fs/promises';
+import { readdir, readFile } from 'fs/promises'
+import * as path from 'path'
 import * as dotenv from 'dotenv'
 import *as odp from './odp.js'
 
@@ -53,7 +54,7 @@ async function main() {
   console.log("Files to update:", toUpdate)
   for (const e of toAdd) {
     // get file
-    const file = await readFile(process.env.docRoot+'/'+mapping[e])
+    const file = await readFile(process.env.docRoot+path.sep+mapping[e])
     // upload file
     const result = await odp.createResource(e, file, process.env.odpDatasetId, process.env.mimeType)
 
@@ -63,7 +64,7 @@ async function main() {
   }
   for (const e of toUpdate) {
     // get file
-    const file = await readFile(process.env.docRoot+'/'+mapping[e])
+    const file = await readFile(process.env.docRoot+path.sep+mapping[e])
 
     // get Meta
     const meta = getResourceMeta(e, dataset.resources)
