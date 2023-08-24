@@ -17,6 +17,10 @@ Copy the `.env.example` file into a file named `.env`. Adjust the following vari
 - mimeType: MIME type of the files which are synced.
 - overwrite: true if the existing files should be overwritten
 
+## Proxy
+If your network connection depends on a proxy, you must set the `https_proxy` environment variable. 
+Example: `export https_proxy="http://myproxy:8080"`
+
 ## Run
 
 You can launch the synchronization with the command `npm run main`. 
