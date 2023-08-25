@@ -1,8 +1,8 @@
 import { readdir, readFile } from 'fs/promises'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
-import *as odp from './odp.js'
-
+import process from 'node:process';
+import * as odp from './odp.js'
 
 // get the udata string for a given input file name
 function toODPNames(name) {
@@ -82,4 +82,4 @@ async function main() {
 }
 
 
-main().then(() => {console.log((new Date()).toLocaleString(), 'Sync successful')}).catch(e => {console.error(e)})
+main().then(() => {console.log((new Date()).toLocaleString(), 'Sync successful')}).catch(e => {console.error(e); process.exitCode = 1;})
