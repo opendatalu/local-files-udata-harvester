@@ -25,10 +25,15 @@ function getResourceMeta(filename, resources) {
   return resource[0]
 }
 
+let log = function(){}
+if (process.env.debug === "true") {
+  log = console.log
+}
+
 async function main() {
   dotenv.config()
 
-  console.log((new Date()).toLocaleString(), 'Syncing starts for the dataset:', process.env.odpDatasetId)
+  log((new Date()).toLocaleString(), 'Syncing starts for the dataset:', process.env.odpDatasetId)
 
   // udata is transforming all file names to its own format
   let fileNamesOnDisk = await readdir(process.env.docRoot)
@@ -50,8 +55,8 @@ async function main() {
     toUpdate = [... new Set(caseInsensitiveFilesOnDisk.filter(x => filesOnODP.has(x)))]
   }
   
-  console.log("Files to add:", toAdd)
-  console.log("Files to update:", toUpdate)
+  log("Files to add:", toAdd)
+  log("Files to update:", toUpdate)
   for (const e of toAdd) {
     // get file
     const file = await readFile(process.env.docRoot+path.sep+mapping[e])
@@ -60,7 +65,7 @@ async function main() {
 
     // display status
     const status = (Object.keys(result).length !== 0)
-    console.log('Resource creation', (result)?'succeeded': 'failed', 'for', e)
+    log('Resource creation', (result)?'succeeded': 'failed', 'for', e)
   }
   for (const e of toUpdate) {
     // get file
@@ -76,10 +81,10 @@ async function main() {
 
     // display status
     const status = (Object.keys(result).length !== 0) && (Object.keys(resultMeta).length !== 0)
-    console.log('Resource update', (result)?'succeeded': 'failed', 'for', e)
+    log('Resource update', (result)?'succeeded': 'failed', 'for', e)
   }
 
 }
 
 
-main().then(() => {console.log((new Date()).toLocaleString(), 'Sync successful')}).catch(e => {console.error(e); process.exitCode = 1;})
+main().then(() => {log((new Date()).toLocaleString(), 'Sync successful')}).catch(e => {console.error(e); process.exitCode = 1;})

@@ -16,6 +16,7 @@ Copy the `.env.example` file into a file named `.env`. Adjust the following vari
 - nameRegex: Optional. Define a regex to filter the filenames you want to be synced.
 - mimeType: MIME type of the files which are synced.
 - overwrite: true if the existing files should be overwritten
+- debug: true to write normal log messages to the log file
 
 ## Proxy
 If your network connection depends on a proxy, you must set the `https_proxy` environment variable. 
