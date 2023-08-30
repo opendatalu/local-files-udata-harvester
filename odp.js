@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { fetchThrottle } from './utils.js'
+import { fetchThrottle, log } from './utils.js'
 import { FormData, File, fileFromSync  } from 'node-fetch'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 
@@ -11,7 +11,7 @@ const odpAPIKey = process.env.odpAPIKey
 let proxyAgent = null
 if (process.env.https_proxy !== undefined) {
     proxyAgent = new HttpsProxyAgent(process.env.https_proxy)
-    console.log("Proxy set to:" + process.env.https_proxy)
+    log("Proxy set to:" + process.env.https_proxy)
 }
 
 async function getDataset(id) {
@@ -29,7 +29,7 @@ async function getDataset(id) {
         }
         const res = await fetchThrottle(odpURL+"/datasets/"+id+"/", params)
         if (!res.ok) {
-            res.text().then(t => { throw t})
+            res.text().then(t => { `status code: ${res.status}, response: ${t}`})
         }
 
         return res.json()
@@ -63,7 +63,7 @@ async function createResource(filename, data, ds_id, mime) {
         }
         const res = await fetchThrottle(odpURL+'/datasets/'+ds_id+'/upload/', params)
         if (!res.ok) {
-            res.text().then(t => { throw t})
+            res.text().then(t => { `status code: ${res.status}, response: ${t}`})
         }
         return res.json()
     } catch (e) {
@@ -95,7 +95,7 @@ async function updateResource(filename, data, ds_id, resource_id, mime) {
         }
         const res = await fetchThrottle(`${odpURL}/datasets/${ds_id}/resources/${resource_id}/upload/`, params)
         if (!res.ok) {
-            res.text().then(t => { throw t})
+            res.text().then(t => { throw `status code: ${res.status}, response: ${t}`})
         }
         return res.json()
     } catch (e) {
@@ -122,7 +122,7 @@ async function updateResourceMeta(ds_id, res_id, title, desc) {
         }
         const res = await fetchThrottle(`${odpURL}/datasets/${ds_id}/resources/${res_id}/`, params)
         if (!res.ok) {
-            res.text().then(t => { throw t})
+            res.text().then(t => { `status code: ${res.status}, response: ${t}`})
         }
         return res.json()        
     } catch (e) {

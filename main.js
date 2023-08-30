@@ -1,8 +1,9 @@
 import { readdir, readFile } from 'fs/promises'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
-import process from 'node:process';
+import process from 'node:process'
 import * as odp from './odp.js'
+import { log } from './utils.js'
 
 // get the udata string for a given input file name
 function toODPNames(name) {
@@ -25,10 +26,6 @@ function getResourceMeta(filename, resources) {
   return resource[0]
 }
 
-let log = function(){}
-if (process.env.debug === "true") {
-  log = console.log
-}
 
 async function main() {
   dotenv.config()
