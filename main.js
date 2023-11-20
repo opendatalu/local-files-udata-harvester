@@ -5,6 +5,13 @@ import process from 'node:process'
 import * as odp from './odp.js'
 import { log } from './utils.js'
 
+let crypto
+try {
+  crypto = await import('node:crypto')
+} catch (err) {
+  console.error('crypto support is disabled!')
+} 
+
 // get the udata string for a given input file name
 function toODPNames(name) {
   return name.toLowerCase().replaceAll(' ', '-').replaceAll('_', '-').replace(/--+/g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -41,7 +48,7 @@ async function main() {
   const mapping = {}
   fileNamesOnDisk.forEach(e => {
     mapping[toODPNames(e)] = e
-  });
+  })
 
   const dataset = await odp.getDataset(process.env.odpDatasetId)
   const filesOnODP = new Set(dataset.resources.map(e => getFilenameFromURL(e.url)))
@@ -67,18 +74,37 @@ async function main() {
   for (const e of toUpdate) {
     // get file
     const file = await readFile(process.env.docRoot+path.sep+mapping[e])
-
     // get Meta
     const meta = getResourceMeta(e, dataset.resources)
-    // upload file
-    const result = await odp.updateResource(e, file, process.env.odpDatasetId, meta.id, process.env.mimeType)
 
-    // update meta (udata bug?)
-    const resultMeta = await odp.updateResourceMeta(process.env.odpDatasetId, meta.id, meta.title, meta.description)
+    // check if the file needs to be updated
+    const algo = meta.checksum.type 
+    const odpHash = meta.checksum.value 
 
-    // display status
-    const status = (Object.keys(result).length !== 0) && (Object.keys(resultMeta).length !== 0)
-    log('Resource update', (result)?'succeeded': 'failed', 'for', e)
+    let update = true
+
+    try {
+      const hash = crypto.createHash(algo);
+      hash.update(file)
+      if (odpHash == hash.digest('hex')) {
+        update = false
+        console.log('File '+e+' is already up to date.')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    
+    if (update) {
+      // upload file
+      const result = await odp.updateResource(e, file, process.env.odpDatasetId, meta.id, process.env.mimeType)
+
+      // update meta (udata bug?)
+      const resultMeta = await odp.updateResourceMeta(process.env.odpDatasetId, meta.id, meta.title, meta.description)
+
+      // display status
+      const status = (Object.keys(result).length !== 0) && (Object.keys(resultMeta).length !== 0)
+      log('Resource update', (result)?'succeeded': 'failed', 'for', e)
+    }
   }
 
 }
