@@ -88,7 +88,7 @@ async function main() {
       hash.update(file)
       if (odpHash == hash.digest('hex')) {
         update = false
-        console.log('File '+e+' is already up to date.')
+        log('File '+e+' is already up to date.')
       }
     } catch (err) {
       console.error(err)
